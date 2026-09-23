@@ -7,15 +7,17 @@ const CONFIG = {
   lists: { vault: 'HQ_Vault', pub: 'HQ_Public', subs: 'HQ_Submissions' },
   opensAt: '09:00', closesAt: '20:00',                      // IST, same for every level
   offsite: '2026-10-09T12:00:00+05:30',
+  // the drive from Onyx to Rosetta along NH75; km are approximate road distance from Bengaluru
+  routeKm: 230,
   levels: [
-    { date: '2026-09-24', title: 'The Whispering Gate', icon: '🕸️', kind: 'Riddle' },
-    { date: '2026-09-26', title: 'The Cursed Commit', icon: '🪦', kind: 'Riddle' },
-    { date: '2026-09-29', title: 'Fog over the Ghats', icon: '🦉', kind: 'Riddle' },
-    { date: '2026-10-02', title: 'The Haunted Stack Trace', icon: '🧟', kind: 'Riddle' },
-    { date: '2026-10-05', title: 'Night of the Living Bugs', icon: '🕷️', kind: 'Daily quiz' },
-    { date: '2026-10-06', title: 'The Crypt of Complexity', icon: '⚰️', kind: 'Daily quiz' },
-    { date: '2026-10-07', title: 'Ghosts of Production Past', icon: '👻', kind: 'Daily quiz' },
-    { date: '2026-10-08', title: 'The Final Séance', icon: '🔮', kind: 'Daily quiz' },
+    { date: '2026-09-24', title: 'The Whispering Gate', icon: '🕸️', kind: 'Riddle', place: 'Onyx, Bengaluru', km: 0, scene: 'city' },
+    { date: '2026-09-26', title: 'The Cursed Toll Booth', icon: '🚧', kind: 'Riddle', place: 'Nelamangala', km: 28, scene: 'city' },
+    { date: '2026-09-29', title: 'Lake of Lost Souls', icon: '🪷', kind: 'Riddle', place: 'Kunigal', km: 70, scene: 'plains' },
+    { date: '2026-10-02', title: 'The Midnight Dhaba', icon: '🍛', kind: 'Riddle', place: 'Yediyur', km: 88, scene: 'plains' },
+    { date: '2026-10-05', title: 'Night of the Living Bugs', icon: '🕷️', kind: 'Daily quiz', place: 'Channarayapatna', km: 145, scene: 'hills' },
+    { date: '2026-10-06', title: 'The Crypt of Complexity', icon: '⚰️', kind: 'Daily quiz', place: 'Hassan', km: 185, scene: 'hills' },
+    { date: '2026-10-07', title: 'Ghosts of Production Past', icon: '👻', kind: 'Daily quiz', place: 'Hemavathi River', km: 222, scene: 'ghats' },
+    { date: '2026-10-08', title: 'The Final Séance', icon: '🔮', kind: 'Daily quiz', place: 'Manjarabad Fort', km: 226, scene: 'ghats' },
   ],
 };
 /* ======================================================= */
@@ -222,7 +224,7 @@ function render() {
   renderHud();
   const app = $('#app');
   app.replaceChildren(...[S.view === 'board' ? renderBoard() : renderTrail(), ADMIN && renderAdmin()].filter(Boolean),
-    h('footer', {}, 'Made with 🎃 for the India PnE offsite · Rosetta Sakleshpur, 9–11 Oct',
+    h('footer', {}, 'Made with 🎃 for the India PnE offsite · Bengaluru → Rosetta Sakleshpur, 9–11 Oct',
       DEMO && h('div', {}, h('a', { href: '#', onclick: e => { e.preventDefault(); try { localStorage.removeItem('hq-demo-v1'); } catch {} location.reload(); } }, 'reset demo'))));
   celebrate();
   if (!S.scrolled && S.view === 'path') { S.scrolled = true; app.querySelector('.cur')?.scrollIntoView({ block: 'center' }); }
@@ -241,14 +243,57 @@ function renderHud() {
   const chip = (icon, v, label) => h('div', { class: 'chip' }, icon, h('div', {}, v, h('small', {}, label)));
   const tab = (v, label) => h('button', { class: 'tab' + (S.view === v ? ' on' : ''), onclick: () => { S.view = v; render(); scrollTo(0, 0); } }, label);
   $('#hud').replaceChildren(
-    h('div', { class: 'brand' }, h('h1', {}, 'The Haunted Trail'), h('p', {}, 'Road to Rosetta · Sakleshpur', DEMO && h('span', { class: 'tag' }, 'DEMO'))),
+    h('div', { class: 'brand' }, h('h1', {}, 'The Haunted Trail'), h('p', {}, 'Bengaluru → Sakleshpur · NH75', DEMO && h('span', { class: 'tag' }, 'DEMO'))),
     h('div', { class: 'stats' }, chip('🎃', me?.p ?? 0, 'points'), chip('🔥', me?.s ?? 0, 'streak'), chip('🏆', rank ? `#${rank}` : '–', `of ${S.board.length || '–'}`)),
     h('div', { class: 'next' }, nextText()),
+    routeBar(),
     h('nav', { class: 'tabs' }, tab('path', '🗺️ Trail'), tab('board', '🪦 Hall of Haunts'), h('button', { class: 'tab', onclick: rules }, '📜 Rules')));
 }
 
+function routeBar() {
+  const lit = LEVELS.filter(L => stateOf(L) !== 'locked').at(-1);
+  const km = now() >= OFFSITE ? CONFIG.routeKm : lit?.km ?? 0, pct = Math.max(2, Math.min(98, 100 * km / CONFIG.routeKm));
+  return h('div', { class: 'route', title: `${km} of ~${CONFIG.routeKm} km` },
+    h('div', { class: 'fill', style: { width: `${pct}%` } }), h('span', { class: 'bus', style: { left: `${pct}%` } }, '🚌'),
+    h('small', {}, `km ${km}`), h('small', {}, `~${CONFIG.routeKm} km · Rosetta`));
+}
+
+// Silhouettes along the route: skyline, then palms and fields, boulder hills, then misty Ghats with coffee rows.
+function scenery(pts, H) {
+  let seed = 11;
+  const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const g = h('svg:svg', { class: 'scene', viewBox: `0 0 400 ${H}`, preserveAspectRatio: 'none', height: H });
+  const add = (tag, a) => g.append(h(`svg:${tag}`, a));
+  const palm = (x, y, s) => {
+    add('path', { d: `M${x} ${y} q${4 * s} ${-22 * s} ${1 * s} ${-44 * s}`, class: 'trunk', 'stroke-width': 3 * s });
+    for (const [dx, dy] of [[-22, 6], [-14, -8], [0, -14], [14, -8], [22, 6]])
+      add('path', { d: `M${x + s} ${y - 44 * s} q${dx * s / 2} ${(dy - 12) * s} ${dx * s} ${dy * s}`, class: 'frond', 'stroke-width': 3 * s });
+  };
+  LEVELS.forEach((L, i) => {
+    const { y } = pts[i], left = pts[i].x > 50, edge = left ? 0 : 290;   // scenery on the side away from the road
+    if (L.scene === 'city') {
+      for (let x = edge; x < edge + 110; x += 14 + r() * 10) {
+        const w = 14 + r() * 16, bh = 40 + r() * 90;
+        add('rect', { x, y: y + 40 - bh, width: w, height: bh, class: 'bldg' });
+        for (let wy = y + 48 - bh; wy < y + 34; wy += 9) if (r() < 0.35) add('rect', { x: x + 3 + r() * (w - 8), y: wy, width: 3, height: 4, class: 'win' });
+      }
+    } else if (L.scene === 'plains') {
+      for (let k = 0; k < 3; k++) add('rect', { x: 0, y: y + 30 + k * 10, width: 400, height: 4, class: 'field' });
+      for (let k = 0; k < 3; k++) palm(edge + 18 + k * 36 + r() * 10, y + 34, 0.8 + r() * 0.5);
+    } else if (L.scene === 'hills') {
+      add('path', { d: `M0 ${y + 60} Q70 ${y - 20} 140 ${y + 40} T280 ${y + 30} T400 ${y + 10} V${y + 90} H0Z`, class: 'hill' });
+      add('ellipse', { cx: edge + 60, cy: y + 18, rx: 34, ry: 26, class: 'rock' });
+    } else {
+      add('path', { d: `M0 ${y + 70} L50 ${y - 50} L110 ${y + 10} L180 ${y - 80} L250 ${y} L320 ${y - 60} L400 ${y - 10} V${y + 110} H0Z`, class: 'peak' });
+      for (let row = 0; row < 3; row++) for (let x = 8; x < 400; x += 16) add('circle', { cx: x + (row % 2) * 8, cy: y + 62 + row * 12, r: 4, class: 'coffee' });
+      add('ellipse', { cx: 120 + r() * 160, cy: y + 20, rx: 180, ry: 18, class: 'mist' });
+    }
+  });
+  return g;
+}
+
 function renderTrail() {
-  const ROW = 150, TOP = 110, n = LEVELS.length;
+  const ROW = 170, TOP = 110, n = LEVELS.length;
   const pts = [...LEVELS, null].map((_, i) => ({ x: 50 + Math.sin(i * 1.2) * 24, y: TOP + i * ROW }));
   const H = TOP + n * ROW + 120;
   const states = LEVELS.map(stateOf);
@@ -256,7 +301,7 @@ function renderTrail() {
   const curve = list => list.map((p, i) => (i ? `C${list[i - 1].x} ${list[i - 1].y + ROW / 2} ${p.x} ${p.y - ROW / 2} ${p.x} ${p.y}` : `M${p.x} ${p.y}`)).join('');
   const cur = states.findIndex(s => s === 'open' || s === 'brewing' || s === 'sealed');
   const svg = h('svg:svg', { viewBox: `0 0 100 ${H}`, preserveAspectRatio: 'none', height: H },
-    h('svg:path', { class: 'road', d: curve(pts) }),
+    h('svg:path', { class: 'road', d: curve(pts) }), h('svg:path', { class: 'lane', d: curve(pts) }),
     lastLit >= 0 && h('svg:path', { class: 'lit', d: curve(pts.slice(0, lastLit + 1)) }));
   const stops = LEVELS.map((L, i) => {
     const st = states[i];
@@ -264,13 +309,13 @@ function renderTrail() {
       st === 'open' && h('div', { class: 'bubble' }, 'PLAY'),
       st === 'sealed' && h('div', { class: 'bubble alt' }, 'SEALED'),
       h('button', { class: `node ${st}`, 'aria-label': `Level ${L.n}: ${L.title}, ${st}`, onclick: () => openLevel(L) }, L.icon, BADGE[st] && h('span', { class: 'badge' }, BADGE[st])),
-      h('div', { class: 'lbl' }, h('b', {}, L.title), `L${L.n} · ${day(L.open)}`));
+      h('div', { class: 'lbl' }, h('b', {}, L.title), h('span', { class: 'place' }, `📍 ${L.place} · ${L.km ? `~${L.km} km` : 'start'}`), `L${L.n} · ${day(L.open)}`));
   });
   const home = pts[n];
   stops.push(h('div', { class: 'stop', style: { left: `${home.x}%`, top: `${home.y}px` } },
     h('button', { class: 'node home', 'aria-label': 'Rosetta Sakleshpur', onclick: () => toast('The haunted mansion awaits, 9 Oct. Costumes mandatory. 🧛') }, '🏚️'),
     h('div', { class: 'lbl', style: { top: '64px' } }, h('b', {}, 'Rosetta Sakleshpur'), 'Halloween night · 9–11 Oct')));
-  return h('div', { class: 'trail', style: { height: `${H}px` } }, svg, stops);
+  return h('div', { class: 'trail', style: { height: `${H}px` } }, scenery(pts.map(p => ({ x: p.x, y: p.y })), H), svg, stops);
 }
 
 function renderBoard() {
@@ -362,7 +407,7 @@ function quizForm(L, pub, mine) {
 function rules() {
   sheet(h('div', { class: 'lvhead' }, h('div', { class: 'lvicon' }, '📜'), h('h2', {}, 'Rules of the Trail')),
     h('ul', { class: 'rules' },
-      h('li', {}, `${LEVELS.length} crypts on the road to Rosetta: two a week, then one every day from Mon 5 to Thu 8 Oct.`),
+      h('li', {}, `${LEVELS.length} haunted stops on the drive from Onyx to Rosetta: two a week, then one every day from Mon 5 to Thu 8 Oct.`),
       h('li', {}, `Each crypt opens at ${clock(LEVELS[0].open)} and seals at ${clock(LEVELS[0].close)} IST the same day.`),
       h('li', {}, '100 🎃 per correct answer. Seal early for up to +50 speed bonus.'),
       h('li', {}, 'Clear crypts back to back (at least half right) to build a 🔥 streak: +20 per streak step, up to +100.'),
@@ -432,7 +477,7 @@ function renderAdmin() {
 function splash(err) {
   $('#hud').replaceChildren();
   $('#app').replaceChildren(h('div', { class: 'splash' }, h('div', { class: 'pumpkin' }, '🎃'), h('h1', {}, 'The Haunted Trail'),
-    h('p', {}, `${LEVELS.length} crypts. One road to Rosetta Sakleshpur.`),
+    h('p', {}, `${LEVELS.length} haunted stops on NH75, Bengaluru to Rosetta Sakleshpur.`),
     err ? h('p', { style: { color: 'var(--blood)' } }, err)
         : h('button', { class: 'btn', onclick: () => pca.loginRedirect({ scopes: SCOPES, redirectStartPage: location.href }) }, 'Enter with Microsoft 365'),
     h('p', { class: 'muted' }, 'Sign in once. We keep you signed in on this device.')));

@@ -57,7 +57,20 @@ main { position: relative; z-index: 1; max-width: 520px; margin: 0 auto; padding
 .trail { position: relative; }
 .trail svg { position: absolute; inset: 0; width: 100%; overflow: visible; }
 .trail path { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-.trail .road { stroke: var(--stone); stroke-width: 14; stroke-dasharray: 2 22; }
+.trail { background: linear-gradient(rgba(60,30,110,.18), rgba(40,60,20,.12) 35%, rgba(60,50,20,.12) 60%, rgba(10,60,35,.25)); border-radius: 24px; }
+.trail .road { stroke: #221c2c; stroke-width: 26; }
+.trail .lane { stroke: rgba(255,193,94,.45); stroke-width: 2; stroke-dasharray: 10 14; }
+.scene { position: absolute; inset: 0; width: 100%; pointer-events: none; }
+.scene .bldg { fill: #1d1438; } .scene .win { fill: var(--ember); opacity: .55; }
+.scene .field { fill: #1c2a14; opacity: .7; } .scene .trunk, .scene .frond { fill: none; stroke: #173524; stroke-linecap: round; }
+.scene .hill { fill: #16261a; } .scene .rock { fill: #2a2533; }
+.scene .peak { fill: #0e2418; } .scene .coffee { fill: #1f5233; } .scene .mist { fill: #d8ccff; opacity: .07; }
+.place { display: block; color: var(--ember); }
+.route { position: relative; height: 8px; margin: 12px 0 18px; border-radius: 99px; background: #221c2c; }
+.route .fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--violet), var(--pumpkin)); }
+.route .bus { position: absolute; top: -13px; margin-left: -12px; font-size: 20px; transform: scaleX(-1); }
+.route small { position: absolute; top: 9px; left: 0; font-size: 10px; color: var(--muted); font-weight: 700; }
+.route small + small { left: auto; right: 0; }
 .trail .lit { stroke: var(--pumpkin); stroke-width: 6; filter: drop-shadow(0 0 6px var(--pumpkin)); }
 .stop { position: absolute; width: 0; height: 0; }
 .node { position: absolute; left: -42px; top: -42px; width: 84px; height: 84px; border: 0; border-radius: 50%; font-size: 38px;
@@ -78,7 +91,7 @@ main { position: relative; z-index: 1; max-width: 520px; margin: 0 auto; padding
   background: #fff; color: var(--pumpkin-d); font-weight: 900; font-size: 14px; letter-spacing: .08em; animation: bob 1.4s ease-in-out infinite; }
 .bubble::after { content: ""; position: absolute; left: 50%; bottom: -7px; margin-left: -7px; border: 7px solid transparent; border-bottom: 0; border-top-color: #fff; }
 .bubble.alt { background: var(--violet-d); color: #fff; } .bubble.alt::after { border-top-color: var(--violet-d); }
-.lbl { position: absolute; top: 52px; left: -80px; width: 160px; text-align: center; font-size: 12px; color: var(--muted); font-weight: 700; line-height: 1.25; }
+.lbl { position: absolute; top: 52px; left: -100px; width: 200px; text-shadow: 0 1px 3px #000, 0 0 10px #000; text-align: center; font-size: 12px; color: var(--muted); font-weight: 700; line-height: 1.25; }
 .lbl b { display: block; color: var(--ink); font-size: 14px; }
 @keyframes pulse { 50% { box-shadow: 0 8px 0 var(--pumpkin-d), 0 0 0 14px rgba(255,122,26,.08), 0 0 55px rgba(255,122,26,.8); } }
 @keyframes bob { 50% { transform: translate(-50%, -6px); } }
