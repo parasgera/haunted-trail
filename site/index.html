@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a0612">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://graph.microsoft.com https://login.microsoftonline.com; frame-src https://login.microsoftonline.com; img-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'">
+<title>The Haunted Trail</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎃</text></svg>">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Creepster&family=Nunito:wght@500;700;900&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="sky" aria-hidden="true"></div>
+<div class="moon" aria-hidden="true"></div>
+<div class="fog" aria-hidden="true"></div>
+<div class="bats" aria-hidden="true"><span>🦇</span><span>🦇</span><span>🦇</span></div>
+<header id="hud"></header>
+<main id="app"><p class="loading">Summoning spirits…</p></main>
+<div id="sheet" hidden></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@4.30.0/lib/msal-browser.min.js" integrity="sha384-RGxxfG5yRS8DLU7ZJ8OoLhbV/BsJFHyPuMVHrTLbpj3t5Z15LnviJmaznKY/a7LZ" crossorigin="anonymous"></script>
+<script src="score.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
